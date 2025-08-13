@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Repository files routes
   app.get("/api/repositories/:id/files", async (req, res) => {
     try {
-      const files = await storage.getRepositoryFiles(req.params.id);
+      const files = await storage.getRepositoryFiles(decodeURIComponent(req.params.id));
       res.json(files);
     } catch (error) {
       console.error("Error fetching repository files:", error);
@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Fetch and populate repository files from GitHub
   app.post("/api/repositories/:id/files/sync", async (req, res) => {
     try {
-      const repository = await storage.getRepository(req.params.id);
+      const repository = await storage.getRepository(decodeURIComponent(req.params.id));
       if (!repository) {
         return res.status(404).json({ message: "Repository not found" });
       }
@@ -309,6 +309,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching test cases:", error);
       res.status(500).json({ message: "Failed to fetch test cases" });
+    }
+  });
+
+  // Individual test case generation
+  app.post("/api/repositories/:id/test-cases/generate", async (req, res) => {
+    try {
+      const { testFramework } = req.body;
+      const repositoryId = decodeURIComponent(req.params.id);
+      
+      // Get selected files
+      const selectedFiles = await storage.getSelectedFiles(repositoryId);
+      if (selectedFiles.length === 0) {
+        return res.status(400).json({ message: "No files selected" });
+      }
+
+      // Prepare files for AI analysis
+      const filesForAI = selectedFiles
+        .filter(file => file.content)
+        .map(file => ({
+          path: file.path,
+          content: file.content!,
+          language: file.language || 'text'
+        }));
+
+      if (filesForAI.length === 0) {
+        return res.status(400).json({ message: "Selected files have no content" });
+      }
+
+      // Generate test case summaries using Gemini
+      const summaries = await geminiService.generateTestCaseSummaries(
+        filesForAI,
+        testFramework || 'Jest'
+      );
+
+      // Store summaries in storage
+      const storedSummaries = await Promise.all(
+        summaries.map(summary => 
+          storage.createTestCaseSummary({
+            repositoryId,
+            testFramework: testFramework || 'Jest',
+            ...summary
+          })
+        )
+      );
+
+      res.json(storedSummaries);
+    } catch (error) {
+      console.error("Error generating test summaries:", error);
+      res.status(500).json({ message: "Failed to generate test summaries" });
+    }
+  });
+
+  // Batch test case generation
+  app.post("/api/repositories/:id/test-cases/batch-generate", async (req, res) => {
+    try {
+      const { testFramework } = req.body;
+      const repositoryId = decodeURIComponent(req.params.id);
+      
+      // Get all repository files (not just selected ones for batch mode)
+      const allFiles = await storage.getRepositoryFiles(repositoryId);
+      const codeFiles = allFiles.filter(file => 
+        file.content && 
+        file.language && 
+        !file.path.includes('node_modules') &&
+        !file.path.includes('.git') &&
+        (file.language.includes('javascript') || 
+         file.language.includes('typescript') || 
+         file.language.includes('python') ||
+         file.language.includes('java') ||
+         file.language.includes('react'))
+      );
+
+      if (codeFiles.length === 0) {
+        return res.status(400).json({ message: "No code files found for batch processing" });
+      }
+
+      // Prepare files for AI analysis
+      const filesForAI = codeFiles.map(file => ({
+        path: file.path,
+        content: file.content!,
+        language: file.language || 'text'
+      }));
+
+      // Generate test case summaries using Gemini
+      const summaries = await geminiService.generateTestCaseSummaries(
+        filesForAI,
+        testFramework || 'Jest'
+      );
+
+      // Store summaries in storage
+      const storedSummaries = await Promise.all(
+        summaries.map(summary => 
+          storage.createTestCaseSummary({
+            repositoryId,
+            testFramework: testFramework || 'Jest',
+            ...summary
+          })
+        )
+      );
+
+      res.json(storedSummaries);
+    } catch (error) {
+      console.error("Error generating batch test summaries:", error);
+      res.status(500).json({ message: "Failed to generate batch test summaries" });
     }
   });
 
