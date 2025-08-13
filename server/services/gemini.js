@@ -43,31 +43,11 @@ For each test case summary, provide:
 
 Return the response as a JSON array of test case summaries.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              title: { type: "string" },
-              description: { type: "string" },
-              priority: { type: "string", enum: ["high", "medium", "low"] },
-              testCaseCount: { type: "string" },
-              estimatedTime: { type: "string" },
-              files: { type: "array", items: { type: "string" } },
-              category: { type: "string" }
-            },
-            required: ["title", "description", "priority", "testCaseCount", "estimatedTime", "files", "category"]
-          }
-        }
-      },
-      contents: prompt,
-    });
-
-    const rawJson = response.text;
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const response = await model.generateContent(prompt);
+    
+    const rawJson = response.response.text();
     if (rawJson) {
       return JSON.parse(rawJson);
     }
@@ -100,38 +80,11 @@ For the entire codebase, provide:
 
 Return as JSON with test summaries for the entire repository.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            strategy: { type: "string" },
-            structure: { type: "string" },
-            criticalPaths: { type: "array", items: { type: "string" } },
-            testSuites: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  description: { type: "string" },
-                  priority: { type: "string" },
-                  testCaseCount: { type: "string" },
-                  estimatedTime: { type: "string" },
-                  files: { type: "array", items: { type: "string" } },
-                  category: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      },
-      contents: prompt,
-    });
-
-    const rawJson = response.text;
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const response = await model.generateContent(prompt);
+    
+    const rawJson = response.response.text();
     if (rawJson) {
       return JSON.parse(rawJson);
     }
@@ -177,12 +130,11 @@ Requirements:
 
     basePrompt += `\n\nGenerate the test file content as a string.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: basePrompt,
-    });
-
-    const code = response.text;
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const response = await model.generateContent(basePrompt);
+    
+    const code = response.response.text();
     if (!code) {
       throw new Error("Failed to generate test code");
     }
