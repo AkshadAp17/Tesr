@@ -449,7 +449,7 @@ export default function TestGenerator() {
                   <div>
                     <Label htmlFor="repository">Select Repository</Label>
                     <Select value={selectedRepository} onValueChange={handleRepositoryChange}>
-                      <SelectTrigger data-testid="select-repository">
+                      <SelectTrigger id="repository" data-testid="select-repository">
                         <SelectValue placeholder="Choose a repository" />
                       </SelectTrigger>
                       <SelectContent>
