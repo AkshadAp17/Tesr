@@ -208,7 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const isCodeFile = /\.(js|jsx|ts|tsx|py|java|cpp|c|h|css|html|json|yaml|yml|md|txt|go|rs|php|rb|swift|kt|scala|sh|bat)$/i.test(item.name);
               const isReasonableSize = !item.size || item.size < 1000000; // Skip files larger than 1MB
               
-              if (isCodeFile && isReasonableSize && !existingPaths.has(item.path)) {
+              if (isCodeFile && isReasonableSize) {
+                // Allow re-syncing files but don't duplicate them
+                if (!existingPaths.has(item.path)) {
                 const language = githubService.getLanguageFromExtension(item.name);
                 allFiles.push({
                   repositoryId: req.params.id,
@@ -219,6 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   language: language,
                   isSelected: false,
                 });
+                }
               }
             } else if (item.type === 'dir' && !item.name.startsWith('.') && item.name !== 'node_modules') {
               // Recursively fetch subdirectories, but skip hidden dirs and node_modules
