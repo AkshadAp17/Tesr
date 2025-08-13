@@ -235,7 +235,11 @@ async function registerRoutes(app) {
         filesWithContent.push(file);
       }
 
+      console.log(`Generating test cases for ${filesWithContent.length} files with ${testFramework}`);
+      
       const summaries = await geminiService.generateTestCaseSummaries(filesWithContent, testFramework);
+      console.log(`Generated ${summaries.length} test case summaries`);
+      
       const createdTestCases = [];
 
       for (const summary of summaries) {

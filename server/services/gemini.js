@@ -4,9 +4,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 class GeminiService {
   async generateTestCaseSummaries(files, testFramework) {
+    console.log(`GeminiService: Starting test case generation for ${files.length} files with framework ${testFramework}`);
+    
     const filesContext = files.map(file => 
       `File: ${file.path} (${file.language})\n\`\`\`${file.language}\n${file.content}\n\`\`\``
     ).join('\n\n');
+    
+    console.log(`GeminiService: Files context length: ${filesContext.length} chars`);
 
     const frameworkPrompts = {
       "Jest (React)": "React component testing with Jest and React Testing Library",
@@ -43,16 +47,28 @@ For each test case summary, provide:
 
 Return the response as a JSON array of test case summaries.`;
 
-    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    const response = await model.generateContent(prompt);
-    
-    const rawJson = response.response.text();
-    if (rawJson) {
-      return JSON.parse(rawJson);
+    try {
+      console.log('GeminiService: Creating model and making API call...');
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const response = await model.generateContent(prompt);
+      console.log('GeminiService: Received response from Gemini');
+      
+      const rawJson = response.response.text();
+      console.log(`GeminiService: Raw response length: ${rawJson ? rawJson.length : 0} chars`);
+      
+      if (rawJson) {
+        const parsed = JSON.parse(rawJson);
+        console.log(`GeminiService: Successfully parsed ${parsed.length} test case summaries`);
+        return parsed;
+      }
+      
+      throw new Error("Failed to generate test case summaries");
+    } catch (error) {
+      console.error('GeminiService Error:', error.message);
+      console.error('Error details:', error);
+      throw error;
     }
-    
-    throw new Error("Failed to generate test case summaries");
   }
 
   async generateBatchTestCases(files, testFramework) {
