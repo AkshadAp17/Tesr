@@ -324,6 +324,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No files selected" });
       }
 
+      // Get repository for GitHub access
+      const repository = await storage.getRepository(repositoryId);
+      if (!repository) {
+        return res.status(404).json({ message: "Repository not found" });
+      }
+
+      // Load content for files that don't have it
+      for (const file of selectedFiles) {
+        if (!file.content) {
+          try {
+            console.log(`Loading content for file: ${file.path}`);
+            const content = await githubService.getFileContent(
+              repository.owner,
+              repository.name,
+              file.path,
+              repository.accessToken!
+            );
+            await storage.updateRepositoryFile(file.id, { content });
+            file.content = content;
+          } catch (error) {
+            console.error(`Failed to load content for ${file.path}:`, error);
+          }
+        }
+      }
+
       // Prepare files for AI analysis
       const filesForAI = selectedFiles
         .filter(file => file.content)
@@ -334,8 +359,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
 
       if (filesForAI.length === 0) {
-        return res.status(400).json({ message: "Selected files have no content" });
+        return res.status(400).json({ message: "Selected files have no content after loading" });
       }
+
+      console.log(`Generating test cases for ${filesForAI.length} files with ${testFramework}`);
 
       // Generate test case summaries using Gemini
       const summaries = await geminiService.generateTestCaseSummaries(

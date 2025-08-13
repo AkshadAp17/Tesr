@@ -205,15 +205,23 @@ async function registerRoutes(app) {
 
   app.post('/api/repositories/:id/test-cases/generate', async (req, res) => {
     try {
+      console.log(`Route: POST /api/repositories/${req.params.id}/test-cases/generate`);
+      console.log('Request body:', req.body);
+      
       const { id } = req.params;
       const { testFramework } = req.body;
 
       if (!testFramework) {
+        console.log('Error: No test framework provided');
         return res.status(400).json({ message: 'Test framework is required' });
       }
 
+      console.log(`Using test framework: ${testFramework}`);
       const selectedFiles = await storage.getSelectedFiles(id);
+      console.log(`Found ${selectedFiles.length} selected files`);
+      
       if (selectedFiles.length === 0) {
+        console.log('Error: No files selected');
         return res.status(400).json({ message: 'No files selected for test generation' });
       }
 
