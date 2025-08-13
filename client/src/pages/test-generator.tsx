@@ -88,7 +88,7 @@ export default function TestGenerator() {
 
   // Fetch repository files
   const { data: repositoryFiles = [], isLoading: isLoadingFiles } = useQuery<any[]>({
-    queryKey: ["/api/repositories", selectedRepository, "files"],
+    queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
     enabled: !!selectedRepository,
   });
 
@@ -101,7 +101,7 @@ export default function TestGenerator() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository, "files"],
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
       });
       toast({
         title: "Success",
@@ -119,7 +119,7 @@ export default function TestGenerator() {
 
   // Fetch test case summaries
   const { data: testCaseSummaries = [], isLoading: isLoadingTestCases } = useQuery<any[]>({
-    queryKey: ["/api/repositories", selectedRepository, "test-cases"],
+    queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "test-cases"],
     enabled: !!selectedRepository,
   });
 
@@ -135,7 +135,7 @@ export default function TestGenerator() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository, "test-cases"],
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "test-cases"],
       });
       const count = Array.isArray(data) ? data.length : data.testCases?.length || 0;
       toast({
@@ -161,7 +161,7 @@ export default function TestGenerator() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository, "test-cases"],
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "test-cases"],
       });
       toast({
         title: "Success",
@@ -220,7 +220,7 @@ export default function TestGenerator() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository, "files"],
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
       });
     },
   });
@@ -232,7 +232,7 @@ export default function TestGenerator() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository, "files"],
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
       });
       toast({
         title: "Success",
@@ -248,7 +248,7 @@ export default function TestGenerator() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository, "files"],
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
       });
       toast({
         title: "Success",
