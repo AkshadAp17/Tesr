@@ -95,7 +95,10 @@ export default function TestGenerator() {
   // Sync repository files mutation
   const syncFilesMutation = useMutation({
     mutationFn: async (repositoryId: string) => {
-      const response = await apiRequest("POST", `/api/repositories/${repositoryId}/files/sync`);
+      console.log("Syncing files for repository:", repositoryId);
+      const encodedRepoId = encodeURIComponent(repositoryId);
+      const response = await apiRequest("POST", `/api/repositories/${encodedRepoId}/files/sync`);
+      console.log("Response headers:", response.headers.get('content-type'));
       return response.json();
     },
     onSuccess: (data) => {
