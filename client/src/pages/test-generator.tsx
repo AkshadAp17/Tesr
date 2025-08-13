@@ -92,6 +92,30 @@ export default function TestGenerator() {
     enabled: !!selectedRepository,
   });
 
+  // Sync repository files mutation
+  const syncFilesMutation = useMutation({
+    mutationFn: async (repositoryId: string) => {
+      const response = await apiRequest("POST", `/api/repositories/${repositoryId}/files/sync`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/repositories", selectedRepository, "files"],
+      });
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to sync files: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch test case summaries
   const { data: testCaseSummaries = [], isLoading: isLoadingTestCases } = useQuery<any[]>({
     queryKey: ["/api/repositories", selectedRepository, "test-cases"],
@@ -242,6 +266,26 @@ export default function TestGenerator() {
       return;
     }
     syncReposMutation.mutate();
+  };
+
+  const handleSyncFiles = () => {
+    if (!selectedRepository) {
+      toast({
+        title: "Error",
+        description: "Please select a repository first",
+        variant: "destructive",
+      });
+      return;
+    }
+    syncFilesMutation.mutate(selectedRepository);
+  };
+
+  const handleRepositoryChange = (repoId: string) => {
+    setSelectedRepository(repoId);
+    // Auto-sync files when repository is selected
+    if (repoId) {
+      syncFilesMutation.mutate(repoId);
+    }
   };
 
   const handleGenerateTests = () => {
@@ -404,7 +448,7 @@ export default function TestGenerator() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="repository">Select Repository</Label>
-                    <Select value={selectedRepository} onValueChange={setSelectedRepository}>
+                    <Select value={selectedRepository} onValueChange={handleRepositoryChange}>
                       <SelectTrigger data-testid="select-repository">
                         <SelectValue placeholder="Choose a repository" />
                       </SelectTrigger>
@@ -454,6 +498,20 @@ export default function TestGenerator() {
                   <Button 
                     variant="outline" 
                     size="sm"
+                    onClick={handleSyncFiles}
+                    disabled={syncFilesMutation.isPending}
+                    data-testid="button-sync-files"
+                  >
+                    {syncFilesMutation.isPending ? (
+                      <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                    )}
+                    Sync Files
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
                     onClick={() => selectAllFilesMutation.mutate()}
                     disabled={selectAllFilesMutation.isPending}
                     data-testid="button-select-all"
@@ -484,6 +542,11 @@ export default function TestGenerator() {
               {isLoadingFiles ? (
                 <div className="flex items-center justify-center py-8">
                   <RefreshCw className="w-6 h-6 animate-spin" />
+                </div>
+              ) : repositoryFiles.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No files found. Click "Sync Files" to fetch repository contents.</p>
                 </div>
               ) : (
                 <>

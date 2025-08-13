@@ -173,6 +173,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch and populate repository files from GitHub
+  app.post("/api/repositories/:id/files/sync", async (req, res) => {
+    try {
+      const repository = await storage.getRepository(req.params.id);
+      if (!repository) {
+        return res.status(404).json({ message: "Repository not found" });
+      }
+
+      if (!repository.accessToken) {
+        return res.status(400).json({ message: "Repository access token not found" });
+      }
+
+      // Get existing files to avoid duplicates
+      const existingFiles = await storage.getRepositoryFiles(req.params.id);
+      const existingPaths = new Set(existingFiles.map(f => f.path));
+
+      const [owner, repo] = repository.fullName.split('/');
+      
+      // Recursively fetch all files from the repository
+      const allFiles: any[] = [];
+      const fetchDirectory = async (path = '') => {
+        try {
+          const contents = await githubService.getRepositoryContents(
+            owner, 
+            repo, 
+            path, 
+            repository.accessToken!
+          );
+
+          for (const item of contents) {
+            if (item.type === 'file') {
+              // Only add programming files and skip very large files
+              const isCodeFile = /\.(js|jsx|ts|tsx|py|java|cpp|c|h|css|html|json|yaml|yml|md|txt|go|rs|php|rb|swift|kt|scala|sh|bat)$/i.test(item.name);
+              const isReasonableSize = !item.size || item.size < 1000000; // Skip files larger than 1MB
+              
+              if (isCodeFile && isReasonableSize && !existingPaths.has(item.path)) {
+                const language = githubService.getLanguageFromExtension(item.name);
+                allFiles.push({
+                  repositoryId: req.params.id,
+                  path: item.path,
+                  name: item.name,
+                  type: 'file',
+                  size: item.size?.toString() || null,
+                  language: language,
+                  isSelected: false,
+                });
+              }
+            } else if (item.type === 'dir' && !item.name.startsWith('.') && item.name !== 'node_modules') {
+              // Recursively fetch subdirectories, but skip hidden dirs and node_modules
+              await fetchDirectory(item.path);
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch directory ${path}:`, (error as Error).message);
+        }
+      };
+
+      await fetchDirectory();
+
+      // Store all files in batches
+      const savedFiles = [];
+      for (const fileData of allFiles) {
+        try {
+          const savedFile = await storage.createRepositoryFile(fileData);
+          savedFiles.push(savedFile);
+        } catch (error) {
+          console.warn(`Failed to save file ${fileData.path}:`, (error as Error).message);
+        }
+      }
+
+      res.json({
+        message: `Synced ${savedFiles.length} files from repository`,
+        files: savedFiles
+      });
+    } catch (error) {
+      console.error("Error syncing repository files:", error);
+      res.status(500).json({ message: "Failed to sync repository files" });
+    }
+  });
+
+  // Select all files for test generation
+  app.post("/api/repositories/:id/files/select-all", async (req, res) => {
+    try {
+      const files = await storage.getRepositoryFiles(req.params.id);
+      const updatedFiles = [];
+      
+      for (const file of files) {
+        const updated = await storage.updateRepositoryFile(file.id, { isSelected: true });
+        if (updated) updatedFiles.push(updated);
+      }
+      
+      res.json(updatedFiles);
+    } catch (error) {
+      console.error("Error selecting all files:", error);
+      res.status(500).json({ message: "Failed to select all files" });
+    }
+  });
+
   app.patch("/api/files/:id", async (req, res) => {
     try {
       const file = await storage.updateRepositoryFile(req.params.id, req.body);
