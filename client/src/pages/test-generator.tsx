@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -624,7 +625,16 @@ export default function TestGenerator() {
                     <TestTube className="w-5 h-5" />
                     <span>Generated Test Cases ({testCaseSummaries.length})</span>
                   </CardTitle>
-                  {selectedTestCases.length > 0 && (
+                  <div className="flex gap-2">
+                    {testCaseSummaries.length > 0 && (
+                      <Link href={`/repositories/${encodeURIComponent(selectedRepository)}/results`}>
+                        <Button variant="outline" data-testid="button-view-results">
+                          <FileText className="w-4 h-4 mr-2" />
+                          View Results & Code
+                        </Button>
+                      </Link>
+                    )}
+                    {selectedTestCases.length > 0 && (
                     <Dialog open={showPrModal} onOpenChange={setShowPrModal}>
                       <DialogTrigger asChild>
                         <Button data-testid="button-create-pr">
@@ -676,7 +686,8 @@ export default function TestGenerator() {
                         </div>
                       </DialogContent>
                     </Dialog>
-                  )}
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

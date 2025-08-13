@@ -396,14 +396,14 @@ async function registerRoutes(app) {
   // GitHub PR routes
   app.post('/api/repositories/:id/create-pr', async (req, res) => {
     try {
-      const { id } = req.params;
+      const repositoryId = decodeURIComponent(req.params.id);
       const { testCaseIds, prTitle, prDescription } = req.body;
 
       if (!testCaseIds || testCaseIds.length === 0) {
         return res.status(400).json({ message: 'Test case IDs are required' });
       }
 
-      const repository = await storage.getRepository(id);
+      const repository = await storage.getRepository(repositoryId);
       if (!repository) {
         return res.status(404).json({ message: 'Repository not found' });
       }
@@ -415,7 +415,7 @@ async function registerRoutes(app) {
         if (!testCase) continue;
 
         if (!testCase.generatedCode) {
-          const allFiles = await storage.getRepositoryFiles(id);
+          const allFiles = await storage.getRepositoryFiles(repositoryId);
           const relevantFiles = allFiles.filter(file => testCase.files.includes(file.path));
           
           const generatedCode = await geminiService.generateTestCode(
