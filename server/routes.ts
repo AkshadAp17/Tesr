@@ -274,6 +274,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update individual file (for toggling selection)
+  app.put("/api/repositories/:repoId/files/:fileId", async (req, res) => {
+    try {
+      const file = await storage.updateRepositoryFile(req.params.fileId, req.body);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      res.json(file);
+    } catch (error) {
+      console.error("Error updating file:", error);
+      res.status(500).json({ message: "Failed to update file" });
+    }
+  });
+
   app.patch("/api/files/:id", async (req, res) => {
     try {
       const file = await storage.updateRepositoryFile(req.params.id, req.body);

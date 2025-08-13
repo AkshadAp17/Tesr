@@ -213,7 +213,8 @@ export default function TestGenerator() {
   // File selection mutations
   const toggleFileMutation = useMutation({
     mutationFn: async ({ fileId, isSelected }: { fileId: string; isSelected: boolean }) => {
-      const response = await apiRequest("PUT", `/api/repositories/${selectedRepository}/files/${fileId}`, {
+      const encodedRepoId = encodeURIComponent(selectedRepository!);
+      const response = await apiRequest("PUT", `/api/repositories/${encodedRepoId}/files/${fileId}`, {
         isSelected: !isSelected
       });
       return response.json();
