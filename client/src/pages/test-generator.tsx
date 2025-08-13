@@ -61,7 +61,7 @@ export default function TestGenerator() {
   // Sync repositories from GitHub
   const syncReposMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/repositories", { accessToken });
+      const response = await apiRequest("POST", "/api/repositories/sync", { accessToken });
       return response.json();
     },
     onSuccess: () => {

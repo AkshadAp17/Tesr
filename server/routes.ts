@@ -28,6 +28,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync repositories from GitHub
+  app.post("/api/repositories/sync", async (req, res) => {
+    try {
+      const { accessToken } = req.body;
+      if (!accessToken) {
+        return res.status(400).json({ message: "Access token required" });
+      }
+
+      // Fetch repositories from GitHub
+      const githubRepos = await githubService.getUserRepositories(accessToken);
+      
+      // Store each repository in local storage
+      const savedRepos = [];
+      for (const githubRepo of githubRepos) {
+        const repoData = {
+          id: githubRepo.full_name,
+          name: githubRepo.name,
+          fullName: githubRepo.full_name,
+          owner: githubRepo.owner.login,
+          description: githubRepo.description || '',
+          language: githubRepo.language || '',
+          isPrivate: githubRepo.private,
+          accessToken: accessToken,
+        };
+        
+        // Check if repository already exists
+        const existingRepo = await storage.getRepository(githubRepo.full_name);
+        if (!existingRepo) {
+          const savedRepo = await storage.createRepository(repoData);
+          savedRepos.push(savedRepo);
+        }
+      }
+      
+      res.json({ 
+        message: `Synced ${savedRepos.length} new repositories`,
+        repositories: savedRepos 
+      });
+    } catch (error) {
+      console.error("Error syncing repositories:", error);
+      res.status(500).json({ message: "Failed to sync repositories" });
+    }
+  });
+
   app.get("/api/repositories/:id", async (req, res) => {
     try {
       const repository = await storage.getRepository(req.params.id);

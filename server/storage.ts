@@ -51,7 +51,7 @@ export class MemStorage implements IStorage {
   }
 
   async createRepository(repo: InsertRepository): Promise<Repository> {
-    const id = randomUUID();
+    const id = repo.id || repo.fullName || randomUUID();
     const repository: Repository = {
       ...repo,
       id,

@@ -42,8 +42,9 @@ export const testCaseSummaries = pgTable("test_case_summaries", {
 });
 
 export const insertRepositorySchema = createInsertSchema(repositories).omit({
-  id: true,
   createdAt: true,
+}).extend({
+  id: z.string().optional(),
 });
 
 export const insertRepositoryFileSchema = createInsertSchema(repositoryFiles).omit({
