@@ -126,9 +126,10 @@ export default function TestGenerator() {
   // Generate test cases mutation
   const generateTestCasesMutation = useMutation({
     mutationFn: async () => {
+      const encodedRepo = encodeURIComponent(selectedRepository);
       const endpoint = batchMode 
-        ? `/api/repositories/${selectedRepository}/test-cases/batch-generate`
-        : `/api/repositories/${selectedRepository}/test-cases/generate`;
+        ? `/api/repositories/${encodedRepo}/test-cases/batch-generate`
+        : `/api/repositories/${encodedRepo}/test-cases/generate`;
       
       const response = await apiRequest("POST", endpoint, { testFramework });
       return response.json();
@@ -180,7 +181,8 @@ export default function TestGenerator() {
   // Create PR mutation
   const createPrMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/repositories/${selectedRepository}/create-pr`, {
+      const encodedRepo = encodeURIComponent(selectedRepository);
+      const response = await apiRequest("POST", `/api/repositories/${encodedRepo}/create-pr`, {
         testCaseIds: selectedTestCases,
         prTitle: prTitle || `Add ${testFramework} test cases`,
         prDescription: prDescription || "AI-generated comprehensive test cases"
