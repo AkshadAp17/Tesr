@@ -1,8 +1,8 @@
-# REST Express Test Generator
+# TestGen AI Pro - Enhanced Test Case Generator
 
 ## Overview
 
-A full-stack web application that helps developers generate comprehensive test cases for their GitHub repositories using AI. The application integrates with GitHub to browse repository files, uses Google's Gemini AI to analyze code and generate test case summaries, and provides a complete workflow from test planning to code generation with optional pull request creation.
+A comprehensive full-stack web application that helps developers generate AI-powered test cases for their GitHub repositories. The enhanced version now includes advanced features like batch test generation, multiple testing framework support (Jest, Cypress, Selenium, Playwright, Pytest, JUnit, Mocha), GitHub pull request creation, customizable test generation, and a streamlined user interface with step-by-step workflow guidance.
 
 ## User Preferences
 
@@ -93,3 +93,40 @@ The application uses a monorepo structure with shared TypeScript schemas and uti
 - Type-safe request/response handling with Zod validation
 
 The architecture prioritizes type safety, developer experience, and maintainability while providing a scalable foundation for AI-powered code analysis and test generation workflows.
+
+## Enhanced Features (Latest Updates)
+
+### New Testing Framework Support
+- **Jest (React)** - React component testing with React Testing Library
+- **Cypress** - End-to-end testing for web applications  
+- **Selenium** - Browser automation testing with WebDriver
+- **Playwright** - Modern browser testing with cross-browser support
+- **Pytest** - Python unit and integration testing
+- **JUnit** - Java unit testing framework
+- **Mocha** - JavaScript testing framework
+
+### Advanced Test Generation Capabilities
+- **Batch Mode** - Automatically process entire repositories for comprehensive test coverage
+- **Custom Test Prompts** - Generate tests based on specific user requirements and scenarios
+- **Template System** - Pre-built test templates for different frameworks and test categories
+- **Multi-Category Support** - Unit, Integration, E2E, and Performance test generation
+- **Smart File Selection** - Automatic detection and selection of code files for testing
+
+### GitHub Integration Enhancements
+- **Pull Request Creation** - Automatically create PRs with generated test files
+- **Branch Management** - Create feature branches for test additions
+- **Test File Organization** - Framework-specific directory structure and naming conventions
+- **Comprehensive PR Descriptions** - Detailed documentation of generated tests and coverage
+
+### User Experience Improvements
+- **Step-by-Step Workflow** - Guided process from setup to code generation
+- **Progress Tracking** - Visual indicators for each stage of test generation
+- **Batch Processing** - Handle multiple files and large repositories efficiently
+- **Code Preview** - View and copy generated test code before creating PRs
+- **Enhanced Error Handling** - Detailed feedback and troubleshooting guidance
+
+### Backend Architecture Conversion
+- **JavaScript Migration** - Converted from TypeScript to JavaScript as requested
+- **Enhanced Storage System** - Improved in-memory storage with template management
+- **Advanced API Endpoints** - Support for batch operations and custom test generation
+- **Service Layer Improvements** - Enhanced GitHub and Gemini service integration

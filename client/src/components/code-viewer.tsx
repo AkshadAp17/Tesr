@@ -9,7 +9,11 @@ interface CodeViewerProps {
   onCreatePR: () => void;
 }
 
-export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerProps) {
+export default function CodeViewer({
+  code,
+  testCase,
+  onCreatePR,
+}: CodeViewerProps) {
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
 
@@ -32,16 +36,16 @@ export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerPro
   };
 
   const handleDownload = () => {
-    const blob = new Blob([code], { type: 'text/plain' });
+    const blob = new Blob([code], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${testCase.title.replace(/\s+/g, '_').toLowerCase()}.test.js`;
+    a.download = `${testCase.title.replace(/\s+/g, "_").toLowerCase()}.test.js`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     toast({
       title: "Downloaded",
       description: "Test file downloaded successfully",
@@ -49,7 +53,7 @@ export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerPro
   };
 
   const getLineNumbers = () => {
-    const lines = code.split('\n');
+    const lines = code.split("\n");
     return lines.map((_, index) => (
       <div key={index + 1} className="text-right pr-4 select-none">
         {index + 1}
@@ -58,15 +62,21 @@ export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerPro
   };
 
   return (
-    <div className="bg-dark-surface rounded-xl border border-dark-border overflow-hidden" data-testid="code-viewer">
+    <div
+      className="bg-dark-surface rounded-xl border border-dark-border overflow-hidden"
+      data-testid="code-viewer"
+    >
       <div className="flex items-center justify-between px-6 py-4 border-b border-dark-border">
         <div className="flex items-center space-x-3">
           <i className="fas fa-code text-gh-blue"></i>
           <h3 className="font-semibold text-slate-100" data-testid="code-title">
             Generated Test Code
           </h3>
-          <span className="px-2 py-1 bg-gh-blue/10 text-gh-blue text-xs rounded" data-testid="code-filename">
-            {testCase.title.replace(/\s+/g, '_').toLowerCase()}.test.js
+          <span
+            className="px-2 py-1 bg-gh-blue/10 text-gh-blue text-xs rounded"
+            data-testid="code-filename"
+          >
+            {testCase.title.replace(/\s+/g, "_").toLowerCase()}.test.js
           </span>
         </div>
         <div className="flex items-center space-x-3">
@@ -77,7 +87,9 @@ export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerPro
             className="text-slate-400 hover:text-slate-100"
             data-testid="copy-button"
           >
-            <i className={`fas ${isCopied ? 'fa-check text-green-400' : 'fa-copy'}`}></i>
+            <i
+              className={`fas ${isCopied ? "fa-check text-green-400" : "fa-copy"}`}
+            ></i>
           </Button>
           <Button
             variant="ghost"
@@ -103,12 +115,18 @@ export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerPro
       <div className="relative">
         <div className="flex">
           {/* Line numbers */}
-          <div className="bg-dark-bg/50 text-xs text-slate-500 py-6 font-mono leading-relaxed min-w-[60px]" data-testid="line-numbers">
+          <div
+            className="bg-dark-bg/50 text-xs text-slate-500 py-6 font-mono leading-relaxed min-w-[60px]"
+            data-testid="line-numbers"
+          >
             {getLineNumbers()}
           </div>
-          
+
           {/* Code content */}
-          <pre className="bg-dark-bg p-6 text-sm text-slate-300 overflow-x-auto font-mono leading-relaxed flex-1" data-testid="code-content">
+          <pre
+            className="bg-dark-bg p-6 text-sm text-slate-300 overflow-x-auto font-mono leading-relaxed flex-1"
+            data-testid="code-content"
+          >
             <code>{code}</code>
           </pre>
         </div>
@@ -124,11 +142,14 @@ export default function CodeViewer({ code, testCase, onCreatePR }: CodeViewerPro
             </span>
             <span data-testid="code-stats">
               <i className="fas fa-file-code mr-1"></i>
-              {code.split('\n').length} lines
+              {code.split("\n").length} lines
             </span>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-slate-500" data-testid="generation-time">
+            <span
+              className="text-xs text-slate-500"
+              data-testid="generation-time"
+            >
               Generated {new Date().toLocaleTimeString()}
             </span>
           </div>
