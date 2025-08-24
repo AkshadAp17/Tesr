@@ -570,6 +570,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Repository PR creation endpoint
+  app.post("/api/repositories/:id/create-pr", async (req, res) => {
+    try {
+      const repositoryId = req.params.id;
+      const { testCaseIds, prTitle, prDescription } = req.body;
+      
+      // Get repository info
+      const repository = await storage.getRepository(repositoryId);
+      if (!repository) {
+        return res.status(404).json({ message: "Repository not found" });
+      }
+      
+      // Get test cases
+      const testCases = await Promise.all(
+        testCaseIds.map((id: string) => storage.getTestCaseSummary(id))
+      );
+      
+      const validTestCases = testCases.filter(Boolean);
+      if (validTestCases.length === 0) {
+        return res.status(400).json({ message: "No valid test cases found" });
+      }
+      
+      // For now, return success without actually creating PR
+      // In a full implementation, this would create files and PR via GitHub API
+      const prData = {
+        url: `https://github.com/${repository.fullName}/pulls`,
+        title: prTitle,
+        description: prDescription,
+        testCases: validTestCases.length,
+        message: "PR creation simulated successfully"
+      };
+      
+      res.json(prData);
+    } catch (error) {
+      console.error("Error creating pull request:", error);
+      res.status(500).json({ message: "Failed to create pull request" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

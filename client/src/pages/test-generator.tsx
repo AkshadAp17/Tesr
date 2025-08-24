@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -37,9 +37,15 @@ import {
 
 export default function TestGenerator() {
   const { toast } = useToast();
-  const [accessToken, setAccessToken] = useState("");
-  const [selectedRepository, setSelectedRepository] = useState("");
-  const [testFramework, setTestFramework] = useState("Jest (React)");
+  const [accessToken, setAccessToken] = useState(() => {
+    return localStorage.getItem('accessToken') || "";
+  });
+  const [selectedRepository, setSelectedRepository] = useState(() => {
+    return localStorage.getItem('selectedRepository') || "";
+  });
+  const [testFramework, setTestFramework] = useState(() => {
+    return localStorage.getItem('testFramework') || "Jest (React)";
+  });
   const [selectedTestCases, setSelectedTestCases] = useState<string[]>([]);
   const [customPrompt, setCustomPrompt] = useState("");
   const [prTitle, setPrTitle] = useState("");
@@ -47,7 +53,10 @@ export default function TestGenerator() {
   const [showPrModal, setShowPrModal] = useState(false);
   const [showCustomTestModal, setShowCustomTestModal] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
-  const [viewMode, setViewMode] = useState<"setup" | "files" | "tests" | "code">("setup");
+  const [viewMode, setViewMode] = useState<"setup" | "files" | "tests" | "code">(() => {
+    const saved = localStorage.getItem('viewMode');
+    return (saved as any) || "setup";
+  });
 
   const testFrameworks = [
     "Jest (React)",
@@ -58,6 +67,23 @@ export default function TestGenerator() {
     "JUnit",
     "Mocha"
   ];
+
+  // Persist state to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('accessToken', accessToken);
+  }, [accessToken]);
+
+  React.useEffect(() => {
+    localStorage.setItem('selectedRepository', selectedRepository);
+  }, [selectedRepository]);
+
+  React.useEffect(() => {
+    localStorage.setItem('testFramework', testFramework);
+  }, [testFramework]);
+
+  React.useEffect(() => {
+    localStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
 
   // Sync repositories from GitHub
   const syncReposMutation = useMutation({
