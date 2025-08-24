@@ -19,7 +19,9 @@ import {
   Code,
   FileCode,
   Terminal,
-  TestTube
+  TestTube,
+  Info,
+  ChevronDown
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -41,6 +43,7 @@ export default function TestResults() {
   const [prTitle, setPrTitle] = useState("");
   const [prDescription, setPrDescription] = useState("");
   const [selectedTestCases, setSelectedTestCases] = useState<string[]>([]);
+  const [expandedTestCase, setExpandedTestCase] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState(() => {
     return localStorage.getItem('accessToken') || "";
   });
@@ -257,7 +260,22 @@ export default function TestResults() {
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="space-y-1">
-                            <CardTitle className="text-lg">{testCase.title}</CardTitle>
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg">{testCase.title}</CardTitle>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => setExpandedTestCase(expandedTestCase === testCase.id ? null : testCase.id)}
+                                data-testid={`details-${testCase.id}`}
+                              >
+                                {expandedTestCase === testCase.id ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <Info className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
                             <div className="flex items-center gap-2">
                               <Badge variant={testCase.priority === 'high' ? 'destructive' : 'secondary'}>
                                 {testCase.priority}
@@ -275,6 +293,84 @@ export default function TestResults() {
                         <CardDescription className="mt-2">
                           {testCase.description}
                         </CardDescription>
+                        
+                        {/* Expandable detailed information */}
+                        {expandedTestCase === testCase.id && (
+                          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
+                            <h4 className="font-semibold text-sm mb-3 text-blue-800 dark:text-blue-300">Detailed Test Case Information</h4>
+                            <div className="space-y-3 text-sm">
+                              
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Test Category:</span>
+                                <span className="ml-2 text-gray-600 dark:text-gray-400">{testCase.category}</span>
+                              </div>
+                              
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Framework:</span>
+                                <span className="ml-2 text-gray-600 dark:text-gray-400">{testCase.testFramework}</span>
+                              </div>
+                              
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Files Tested:</span>
+                                <div className="ml-2 mt-1">
+                                  {testCase.files?.map((file: string, index: number) => (
+                                    <div key={index} className="flex items-center space-x-2">
+                                      <FileCode className="w-3 h-3 text-blue-500" />
+                                      <span className="text-gray-600 dark:text-gray-400 text-xs font-mono">{file}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Test Scenarios ({testCase.testCaseCount} total):</span>
+                                <div className="ml-2 mt-1 space-y-1">
+                                  {testCase.scenarios?.map((scenario: any, index: number) => (
+                                    <div key={index} className="flex items-start space-x-2">
+                                      <Target className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                                      <span className="text-gray-600 dark:text-gray-400 text-xs">{scenario.description || scenario}</span>
+                                    </div>
+                                  )) || (
+                                    <div className="text-gray-500 text-xs">Detailed scenarios included in generated test code</div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Coverage Areas:</span>
+                                <div className="ml-2 mt-1 flex flex-wrap gap-1">
+                                  {testCase.coverageAreas?.map((area: string, index: number) => (
+                                    <span key={index} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
+                                      {area}
+                                    </span>
+                                  )) || (
+                                    <span className="text-gray-500 text-xs">Component rendering, user interactions, state management</span>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Testing Approach:</span>
+                                <div className="ml-2 mt-1 text-gray-600 dark:text-gray-400 text-xs space-y-1">
+                                  <div>• Unit tests for individual component functionality</div>
+                                  <div>• Integration tests for component interactions</div>
+                                  <div>• Edge case and error handling validation</div>
+                                  <div>• Accessibility and user experience testing</div>
+                                </div>
+                              </div>
+                              
+                              {testCase.generatedCode && (
+                                <div>
+                                  <span className="font-medium text-gray-700 dark:text-gray-300">Code Status:</span>
+                                  <div className="ml-2 mt-1 flex items-center space-x-2">
+                                    <CheckCircle className="w-3 h-3 text-green-500" />
+                                    <span className="text-green-600 dark:text-green-400 text-xs">Code generated and ready for implementation</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </CardHeader>
                       
                       {testCase.generatedCode && (
