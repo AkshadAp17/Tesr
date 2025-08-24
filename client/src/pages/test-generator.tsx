@@ -212,7 +212,8 @@ export default function TestGenerator() {
       const response = await apiRequest("POST", `/api/repositories/${encodedRepo}/create-pr`, {
         testCaseIds: selectedTestCases,
         prTitle: prTitle || `Add ${testFramework} test cases`,
-        prDescription: prDescription || "AI-generated comprehensive test cases"
+        prDescription: prDescription || "AI-generated comprehensive test cases",
+        accessToken: accessToken
       });
       return response.json();
     },

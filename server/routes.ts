@@ -573,8 +573,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Repository PR creation endpoint
   app.post("/api/repositories/:id/create-pr", async (req, res) => {
     try {
-      const repositoryId = req.params.id;
-      const { testCaseIds, prTitle, prDescription } = req.body;
+      const repositoryId = decodeURIComponent(req.params.id);
+      const { testCaseIds, prTitle, prDescription, accessToken } = req.body;
+      
+      if (!accessToken) {
+        return res.status(400).json({ message: "GitHub access token is required" });
+      }
       
       // Get repository info
       const repository = await storage.getRepository(repositoryId);
@@ -582,27 +586,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Repository not found" });
       }
       
-      // Get test cases
+      // Get test cases with generated code
       const testCases = await Promise.all(
         testCaseIds.map((id: string) => storage.getTestCaseSummary(id))
       );
       
-      const validTestCases = testCases.filter(Boolean);
+      const validTestCases = testCases.filter(tc => tc && tc.generatedCode);
       if (validTestCases.length === 0) {
-        return res.status(400).json({ message: "No valid test cases found" });
+        return res.status(400).json({ message: "No test cases with generated code found" });
       }
       
-      // For now, return success without actually creating PR
-      // In a full implementation, this would create files and PR via GitHub API
-      const prData = {
-        url: `https://github.com/${repository.fullName}/pulls`,
-        title: prTitle,
-        description: prDescription,
-        testCases: validTestCases.length,
-        message: "PR creation simulated successfully"
-      };
+      // Parse repository full name to get owner and repo
+      const [owner, repo] = repository.fullName.split('/');
+      if (!owner || !repo) {
+        return res.status(400).json({ message: "Invalid repository format" });
+      }
       
-      res.json(prData);
+      // Create a unique branch name
+      const timestamp = Date.now();
+      const branchName = `testgen-ai-${timestamp}`;
+      
+      try {
+        // For now, create a simple PR without actually committing files
+        // This demonstrates the PR creation flow
+        const prData = await githubService.createPullRequest(
+          owner,
+          repo,
+          prTitle || `Add AI-generated test cases`,
+          prDescription || `This PR adds ${validTestCases.length} AI-generated test cases.\n\nGenerated tests:\n${validTestCases.map(tc => `- ${tc.title} (${tc.testFramework})`).join('\n')}\n\nNote: Test files need to be manually added to the repository.`,
+          branchName,
+          'main',
+          accessToken
+        );
+        
+        res.json({
+          url: prData.html_url,
+          number: prData.number,
+          title: prData.title,
+          testCases: validTestCases.length,
+          message: "Pull request created successfully"
+        });
+      } catch (githubError: any) {
+        console.error("GitHub API error:", githubError);
+        
+        // Handle specific GitHub errors
+        if (githubError.message?.includes('422')) {
+          return res.status(400).json({ 
+            message: "Cannot create PR: Branch may not exist or PR already exists. Please ensure the repository has the required branch." 
+          });
+        }
+        
+        throw githubError;
+      }
     } catch (error) {
       console.error("Error creating pull request:", error);
       res.status(500).json({ message: "Failed to create pull request" });

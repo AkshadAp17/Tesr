@@ -41,6 +41,9 @@ export default function TestResults() {
   const [prTitle, setPrTitle] = useState("");
   const [prDescription, setPrDescription] = useState("");
   const [selectedTestCases, setSelectedTestCases] = useState<string[]>([]);
+  const [accessToken, setAccessToken] = useState(() => {
+    return localStorage.getItem('accessToken') || "";
+  });
 
   // Fetch test case summaries
   const { data: testCases = [], isLoading } = useQuery<any[]>({
@@ -56,7 +59,8 @@ export default function TestResults() {
       const response = await apiRequest("POST", `/api/repositories/${encodedRepo}/create-pr`, {
         testCaseIds,
         prTitle: prTitle || `Add test cases for ${repositoryId}`,
-        prDescription: prDescription || "AI-generated comprehensive test cases"
+        prDescription: prDescription || "AI-generated comprehensive test cases",
+        accessToken: accessToken
       });
       return response.json();
     },
