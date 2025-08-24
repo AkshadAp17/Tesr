@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useRoute } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +21,10 @@ import {
   Terminal,
   TestTube
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface TestFrameworkInstructions {
   setup: string[];
@@ -27,14 +33,54 @@ interface TestFrameworkInstructions {
 }
 
 export default function TestResults() {
+  const { toast } = useToast();
   const [, params] = useRoute("/repositories/:id/results");
   const repositoryId = params?.id ? decodeURIComponent(params.id) : "";
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [showPrModal, setShowPrModal] = useState(false);
+  const [prTitle, setPrTitle] = useState("");
+  const [prDescription, setPrDescription] = useState("");
+  const [selectedTestCases, setSelectedTestCases] = useState<string[]>([]);
 
   // Fetch test case summaries
   const { data: testCases = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/repositories", repositoryId && encodeURIComponent(repositoryId), "test-cases"],
     enabled: !!repositoryId,
+  });
+
+  // Create PR mutation
+  const createPrMutation = useMutation({
+    mutationFn: async () => {
+      const encodedRepo = encodeURIComponent(repositoryId);
+      const testCaseIds = testCases.map((tc: any) => tc.id);
+      const response = await apiRequest("POST", `/api/repositories/${encodedRepo}/create-pr`, {
+        testCaseIds,
+        prTitle: prTitle || `Add test cases for ${repositoryId}`,
+        prDescription: prDescription || "AI-generated comprehensive test cases"
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: `Pull request created successfully!`,
+      });
+      setShowPrModal(false);
+      setPrTitle("");
+      setPrDescription("");
+      setSelectedTestCases([]);
+      // Open PR in new tab
+      if (data.url) {
+        window.open(data.url, '_blank');
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to create pull request: ${error.message}`,
+        variant: "destructive",
+      });
+    },
   });
 
   const handleCopyCode = async (code: string, testId: string) => {
@@ -366,12 +412,68 @@ export default function TestResults() {
               <p className="text-sm text-muted-foreground mb-4">
                 Create a pull request to add these tests directly to your repository.
               </p>
-              <Link href="/test-generator">
-                <Button className="w-full" data-testid="button-create-pr">
-                  <GitPullRequest className="h-4 w-4 mr-2" />
-                  Create Pull Request
-                </Button>
-              </Link>
+              {testsWithCode.length > 0 ? (
+                <Dialog open={showPrModal} onOpenChange={setShowPrModal}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" data-testid="button-create-pr">
+                      <GitPullRequest className="h-4 w-4 mr-2" />
+                      Create Pull Request ({testsWithCode.length} tests)
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create Pull Request</DialogTitle>
+                      <DialogDescription>
+                        Create a pull request with {testsWithCode.length} generated test cases
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="pr-title">Pull Request Title</Label>
+                        <Input
+                          id="pr-title"
+                          placeholder={`Add test cases for ${repositoryId}`}
+                          value={prTitle}
+                          onChange={(e) => setPrTitle(e.target.value)}
+                          data-testid="input-pr-title"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="pr-description">Description</Label>
+                        <Textarea
+                          id="pr-description"
+                          placeholder="AI-generated comprehensive test cases with full coverage"
+                          value={prDescription}
+                          onChange={(e) => setPrDescription(e.target.value)}
+                          rows={3}
+                          data-testid="textarea-pr-description"
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => setShowPrModal(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={() => createPrMutation.mutate()}
+                          disabled={createPrMutation.isPending}
+                          data-testid="button-confirm-pr"
+                        >
+                          {createPrMutation.isPending ? "Creating..." : "Create PR"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <div className="text-center p-4 border-2 border-dashed border-gray-300 rounded-lg">
+                  <p className="text-sm text-gray-500 mb-2">No test code generated yet</p>
+                  <Link href="/test-generator">
+                    <Button variant="outline" size="sm">
+                      Generate Test Code First
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </CardContent>
           </Card>
 
