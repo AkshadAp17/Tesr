@@ -229,21 +229,6 @@ export default function TestGenerator() {
     },
   });
 
-  const selectAllFilesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/repositories/${selectedRepository}/files/select-all`);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
-      });
-      toast({
-        title: "Success",
-        description: "All files selected",
-      });
-    },
-  });
 
   const clearSelectionMutation = useMutation({
     mutationFn: async () => {
@@ -517,16 +502,6 @@ export default function TestGenerator() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => selectAllFilesMutation.mutate()}
-                    disabled={selectAllFilesMutation.isPending}
-                    data-testid="button-select-all"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Select All
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
                     onClick={() => clearSelectionMutation.mutate()}
                     disabled={clearSelectionMutation.isPending}
                     data-testid="button-clear-selection"
@@ -539,7 +514,7 @@ export default function TestGenerator() {
               <CardDescription>
                 {batchMode 
                   ? "In batch mode, all code files will be automatically selected"
-                  : `Select files for test generation (${selectedFiles_data.length} selected)`
+                  : `Select files for test generation (${selectedFiles_data.length} selected). For better performance, select 4-5 files at a time.`
                 }
               </CardDescription>
             </CardHeader>
