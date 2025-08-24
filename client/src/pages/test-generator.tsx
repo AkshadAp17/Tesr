@@ -222,7 +222,30 @@ export default function TestGenerator() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async ({ fileId, isSelected }) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({
+        queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
+      });
+      
+      // Snapshot the previous value
+      const previousFiles = queryClient.getQueryData(["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"], (old: any) => {
+        return old?.map((file: any) => 
+          file.id === fileId ? { ...file, isSelected: !isSelected } : file
+        );
+      });
+      
+      // Return a context object with the snapshotted value
+      return { previousFiles };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"], context?.previousFiles);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["/api/repositories", selectedRepository && encodeURIComponent(selectedRepository), "files"],
       });
