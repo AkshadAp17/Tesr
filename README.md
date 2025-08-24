@@ -1,8 +1,66 @@
 # TestGen AI Pro - Enhanced Test Case Generator
 
+<div align="center">
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/react-%5E18.0.0-blue.svg)](https://reactjs.org/)
+
+</div>
+
+## 👋 About Me
+
+<div align="center">
+
+### Hi there! 👋 I'm Akshad Apastambh
+
+<div class="sliding-text">
+  
+**🚀 Full Stack Developer | 🧠 Problem Solver | 350+ DSA Problems Solved**
+
+**🤖 AI & Web Development Enthusiast | 💻 Always Learning**
+
+</div>
+
+---
+
+</div>
+
+<style>
+.sliding-text {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: slideIn 2s ease-in-out;
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sliding-text strong {
+  display: inline-block;
+  animation: textGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+</style>
 
 A comprehensive full-stack web application that helps developers generate AI-powered test cases for their GitHub repositories. TestGen AI Pro supports multiple testing frameworks, offers batch processing capabilities, and integrates seamlessly with GitHub for automated pull request creation.
 
